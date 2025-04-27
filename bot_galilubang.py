@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-ADMIN_GROUP_ID = int(os.getenv('ADMIN_GROUP_ID'))
+ADMIN_GROUP_ID = os.getenv('ADMIN_GROUP_ID')
 
 user_message_mapping = {}
 
@@ -15,7 +15,7 @@ logging.basicConfig(
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Selamat datang ke Gali Lubang Bot!\nHantar mesej anda di sini dan kami akan balas secara rahsia."
+        "Selamat datang ke Gali Lubang Bot!\nHantar mesej anda dan kami akan hantar kepada Admin secara rahsia."
     )
 
 async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -32,7 +32,7 @@ async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text("Mesej anda telah dihantar secara rahsia.")
 
 async def handle_admin_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.reply_to_message and update.message.chat_id == ADMIN_GROUP_ID:
+    if update.message.reply_to_message and update.message.chat_id == int(ADMIN_GROUP_ID):
         replied_message_id = update.message.reply_to_message.message_id
         user_id = user_message_mapping.get(replied_message_id)
 
@@ -43,7 +43,7 @@ async def handle_admin_reply(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     text=f"Balasan admin:\n{update.message.text}"
                 )
             except Exception as e:
-                logging.error(f"Gagal hantar mesej ke user: {e}")
+                logging.error(f"Gagal hantar balasan ke user: {e}")
 
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -52,7 +52,6 @@ async def main():
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE & filters.TEXT, handle_user_message))
     app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.REPLY & filters.TEXT, handle_admin_reply))
 
-    print("Bot jalan...")
     await app.run_polling()
 
 if _name_ == '_main_':
